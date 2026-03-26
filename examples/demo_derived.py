@@ -58,7 +58,7 @@ window.show()
 
 
 # --- Update loop ---
-@registry.register_callback(trace=True)
+@registry.register_callback()
 def update():
     vals = []
     for ns in namespaces:
