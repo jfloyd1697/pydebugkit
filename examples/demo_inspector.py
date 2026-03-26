@@ -17,7 +17,7 @@ class Sensor:
         self.name = name
         self._reading = 0
 
-    @debug_property(key="{name}", trace=True)
+    @debug_property(key="{name}")
     def reading(self):
         self._reading += random.random() - 0.5
         return self._reading
