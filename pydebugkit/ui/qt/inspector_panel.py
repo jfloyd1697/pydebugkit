@@ -5,8 +5,8 @@ from PyQt5.QtWidgets import (
     QLabel, QSplitter
 )
 from PyQt5.QtCore import Qt
-from debugkit.core.registry import registry
-from debugkit.ui.qt.plotter import LivePlot
+from pydebugkit.core.registry import registry
+from pydebugkit.ui.qt.plotter import LivePlot
 
 
 class InspectorPanel(QWidget):

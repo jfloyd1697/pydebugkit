@@ -3,7 +3,7 @@ import time
 
 from pyqtgraph import PlotWidget, mkPen, DateAxisItem
 
-from debugkit.core.registry import registry
+from pydebugkit.core.registry import registry
 
 
 class LivePlot:

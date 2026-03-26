@@ -1,10 +1,10 @@
 import sys, random, os
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTimer
-from debugkit.ui.qt.main_window import DebugMainWindow
-from debugkit.ui.qt.multi_plot import MultiPlotManager
-from debugkit.core.registry import registry
-from debugkit.core.property import debug_property, collect
+from pydebugkit.ui.qt.main_window import DebugMainWindow
+from pydebugkit.ui.qt.multi_plot import MultiPlotManager
+from pydebugkit.core.registry import registry
+from pydebugkit.core.property import debug_property, collect
 import pyqtgraph as pg
 
 LAYOUT_FILE = "layout_multi_instance_overlay_derived.bin"

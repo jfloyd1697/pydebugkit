@@ -1,8 +1,8 @@
 # recorder.py
 import time
 from collections import defaultdict
-from debugkit.core.registry import registry
-from debugkit.core.property import DebugProperty
+from pydebugkit.core.registry import registry
+from pydebugkit.core.property import DebugProperty
 
 
 class Recorder:
