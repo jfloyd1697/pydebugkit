@@ -1,7 +1,4 @@
-import datetime
-import time
-
-from pyqtgraph import PlotWidget, mkPen, DateAxisItem
+from pyqtgraph import PlotWidget, mkPen
 
 from pydebugkit.core.registry import registry
 
@@ -12,8 +9,6 @@ class LivePlot:
         self.plot_widget = PlotWidget(parent)
         self.plot_widget.setTitle(title)
         self.plot_widget.addLegend()
-        # axis = DateAxisItem()
-        # self.plot_widget.setAxisItems({'bottom': axis})
         self.curves = {}  # key -> plot curve
         self.data = {}    # key -> list of values
 
