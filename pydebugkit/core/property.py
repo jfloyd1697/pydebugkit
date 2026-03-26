@@ -14,14 +14,22 @@ class DebugProperty:
         return self.fget(self.instance)
 
 
-def debug_property(**kwargs):
+def debug_property(fn=None, **kwargs):
+    # If called as @debug_property (no parentheses)
+    if fn is not None and callable(fn):
+        return debug_property(**kwargs)(fn)
+
+    # Otherwise return the actual decorator
     def wrapper(fn):
         dp = DebugProperty(fn, **kwargs)
+
         @wraps(fn)
-        def wrapped(*a, **kw):
-            return fn(*a, **kw)
+        def wrapped(*args, **kw):
+            return fn(*args, **kw)
+
         wrapped._debug_property = dp
         return wrapped
+
     return wrapper
 
 def collect(obj, namespace=""):
