@@ -3,8 +3,8 @@ import sys, random
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from PyQt5.QtCore import QTimer
 
-from pydebugkit.core.registry import registry
-from pydebugkit.core.property import debug_property, collect
+from pydebugkit.core import collect
+from pydebugkit import debug_property, global_registry
 from pydebugkit.core.recorder import Recorder
 from pydebugkit.ui.qt.inspector_panel import InspectorPanel
 
@@ -13,13 +13,15 @@ from pydebugkit.ui.qt.inspector_panel import InspectorPanel
 # Device
 # -------------------------
 class Sensor:
-    def __init__(self, name):
+    def __init__(self, name, initial=0, noise_pp=0.1):
         self.name = name
         self._reading = 0
+        self._min = initial - noise_pp
+        self._max = initial + noise_pp
 
-    @debug_property(key="{name}")
+    @debug_property(key="{name}", units="V", min={"attr": "_min"}, max={"attr": "_max"})
     def reading(self):
-        self._reading += random.random() - 0.5
+        self._reading = random.uniform(self._min, self._max)
         return self._reading
 
 
@@ -58,23 +60,21 @@ recorder = Recorder([f"{sensor.name}.reading" for sensor in sensors])
 # -------------------------
 # Derived Signal
 # -------------------------
-registry.create_derived(
+global_registry.create_derived(
     "Derived.total",
     lambda *vals: sum(vals),
-    [f"{sensor.name}.reading" for sensor in sensors]
+    [f"{sensor.name}.reading" for sensor in sensors],
+    auto=False,
 )
 recorder.add_series("Derived.total")
+
+inspector.populate_tree(recorder.keys())
 
 # -------------------------
 # Update Loop
 # -------------------------
-def update():
-    for sensor in sensors:
-        val = registry.get(f"{sensor.name}.reading")
-        registry.emit(f"{sensor.name}.reading", val)
-
 timer = QTimer()
-timer.timeout.connect(update)
+timer.timeout.connect(recorder.update)
 timer.start(50)
 
 sys.exit(app.exec_())

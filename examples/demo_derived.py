@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTimer
 from pydebugkit.ui.qt.main_window import DebugMainWindow
 from pydebugkit.ui.qt.multi_plot import MultiPlotManager
-from pydebugkit.core.registry import registry
-from pydebugkit.core.property import debug_property, collect
+from pydebugkit.core import collect
+from pydebugkit import debug_property, global_registry
 import pyqtgraph as pg
 
 LAYOUT_FILE = "layout_multi_instance_overlay_derived.bin"
@@ -49,21 +49,21 @@ derived_panel.add_series("Derived.max", pen="w", width=2)
 derived_panel.add_series("Derived.min", pen="w", width=2)
 derived_panel.add_series("Derived.update", pen="m", width=2)
 
-registry.create_derived("Derived.total", lambda *v: sum(v), [f"{ns}.reading" for ns in namespaces])
-registry.create_derived("Derived.max", lambda *v: max(v), [f"{ns}.reading" for ns in namespaces])
-registry.create_derived("Derived.min", lambda *v: min(v), [f"{ns}.reading" for ns in namespaces])
-registry.create_derived("Derived.update", lambda *v: int(int(100 * v[0]) % 2), ["Derived.total"])
+global_registry.create_derived("Derived.total", lambda *v: sum(v), [f"{ns}.reading" for ns in namespaces])
+global_registry.create_derived("Derived.max", lambda *v: max(v), [f"{ns}.reading" for ns in namespaces])
+global_registry.create_derived("Derived.min", lambda *v: min(v), [f"{ns}.reading" for ns in namespaces])
+global_registry.create_derived("Derived.update", lambda *v: int(int(100 * v[0]) % 2), ["Derived.total"])
 
 window.show()
 
 
 # --- Update loop ---
-@registry.register_callback()
+@global_registry.register_callback()
 def update():
     vals = []
     for ns in namespaces:
-        val = registry.get(f"{ns}.reading")
-        registry.emit(f"{ns}.reading", val)
+        val = global_registry.get(f"{ns}.reading")
+        global_registry.emit(f"{ns}.reading", val)
         vals.append(val)
     return int(int(100 * sum(vals)) % 2)
 

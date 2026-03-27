@@ -1,61 +1,65 @@
 # recorder.py
 import time
 from collections import defaultdict
-from pydebugkit.core.registry import registry
+from pydebugkit.core import global_registry
 from pydebugkit.core.property import DebugProperty
 
 
 class Recorder:
     def __init__(self, keys, namespace="Recorder", max_len=1000):
-        self.keys = keys
         self.namespace = namespace
         self.max_len = max_len
 
         self._data = defaultdict(list)
         self._timestamps = defaultdict(list)
 
-        self._setup()
+        self._setup(keys)
+
+    def update(self):
+        for key in self.keys():
+            global_registry.update(key)
 
     # -------------------------
     # Setup
     # -------------------------
-    def _setup(self):
-        for key in self.keys:
+    def _setup(self, keys):
+        for key in keys:
             self.add_series(key)
 
     def add_series(self, key):
         rec_key = self._make_rec_key(key)
+        self._data[rec_key] = []
 
         # -------------------------
         # History property
         # -------------------------
-        registry.register(
+        global_registry.register(
             rec_key,
-            DebugProperty(lambda k=key: list(self._data[k]))
+            DebugProperty(lambda k=key: list(self._data[k]), tags=["recorder_history"])
         )
 
         # -------------------------
         # Latest value property
         # -------------------------
         latest_key = f"{rec_key}_latest"
-        registry.register(
+        global_registry.register(
             latest_key,
-            DebugProperty(lambda k=key: self._data[k][-1] if self._data[k] else None)
+            DebugProperty(lambda k=key: self._data[k][-1] if self._data[k] else None, tags=["recorder_latest"])
         )
 
         # -------------------------
         # Timestamp property
         # -------------------------
         ts_key = f"{rec_key}_timestamps"
-        registry.register(
+        global_registry.register(
             ts_key,
-            DebugProperty(lambda k=key: list(self._timestamps[k]))
+            DebugProperty(lambda k=key: list(self._timestamps[k]), tags=["recorder_timestamps"])
         )
 
         # -------------------------
         # Subscribe to source signal
         # -------------------------
-        registry.subscribe(key, self._make_callback(key, rec_key, latest_key, ts_key))
+        global_registry.subscribe(key, self._make_callback(key, rec_key, latest_key, ts_key))
 
     def _make_rec_key(self, key):
         return f"{self.namespace}.{key}"
@@ -78,9 +82,9 @@ class Recorder:
                     self._timestamps[source_key].pop(0)
 
             # emit updates (COPY to avoid mutation bugs)
-            registry.emit(rec_key, list(self._data[source_key]))
-            registry.emit(latest_key, new)
-            registry.emit(ts_key, list(self._timestamps[source_key]))
+            global_registry.emit(rec_key, list(self._data[source_key]))
+            global_registry.emit(latest_key, new)
+            global_registry.emit(ts_key, list(self._timestamps[source_key]))
 
         return callback
 
@@ -92,3 +96,6 @@ class Recorder:
 
     def get_timestamps(self, key):
         return self._timestamps[key]
+
+    def keys(self):
+        return list(self._data.keys())

@@ -1,13 +1,18 @@
 from collections import defaultdict
+from copy import deepcopy
+
+from pydebugkit.core.property import DebugProperty
+
 
 class Registry:
     """Stores debug properties and allows per-key subscriptions."""
+
     def __init__(self):
-        self._settings = {}  # key -> DebugProperty
+        self._settings: dict[str, DebugProperty] = {}  # key -> DebugProperty
         self._subscribers = defaultdict(list)  # key -> list of callbacks
         self._derived_dependencies = defaultdict(list)  # key -> list of deps for derived
 
-    def register(self, key, debug_prop):
+    def register(self, key, debug_prop: DebugProperty):
         """Register a debug property under a key."""
         self._settings[key] = debug_prop
         self.emit("__registry_updated__", key)
@@ -15,6 +20,10 @@ class Registry:
     def keys(self):
         """Return all registered keys."""
         return list(self._settings.keys())
+
+    def has_key(self, key):
+        """Check if a key is registered."""
+        return key in self._settings
 
     def get(self, key):
         """Return the current value of a key."""
@@ -37,6 +46,13 @@ class Registry:
         for fn in self._subscribers.get(key, []):
             fn(key, new_value)
 
+    def update(self, key):
+        """Manually trigger an update for a key (recalculate and emit)."""
+        if key not in self._settings:
+            raise KeyError(f"Key '{key}' not registered in registry")
+        new_val = self.get(key)
+        self.emit(key, new_val)
+
     def register_callback(self, /, callback=None, *, key=None, **kwargs):
         """Register a callback as a DebugProperty that can be subscribed to."""
         from .property import DebugProperty
@@ -45,6 +61,7 @@ class Registry:
             # used as a decorator
             def callback(fn):
                 return self.register_callback(fn, key=key, **kwargs)
+
             return callback
 
         def update(*args, **kwargs):
@@ -56,7 +73,7 @@ class Registry:
         self.register(key, DebugProperty(update, **kwargs))
         return update
 
-    def create_derived(self, key, func, dependencies, **kwargs):
+    def create_derived(self, key, func, dependencies, auto=True, **kwargs):
         """
         Create a derived property.
 
@@ -82,29 +99,6 @@ class Registry:
             new_val = self.get(key)
             self.emit(key, new_val)
 
-        for dep in dependencies:
-            self.subscribe(dep, update_derived)
-
-
-registry = Registry()
-
-
-def test():
-    def create_listener(name):
-        def listener(key, old, new):
-            print(f"{name}: {key} changed: {old} -> {new}")
-        return listener
-
-    listener = create_listener("A")
-    listener2 = create_listener("B")
-    registry.subscribe("Sensor1.reading", listener)
-
-    registry.subscribe("Sensor2.reading", listener)
-    registry.subscribe("Sensor2.reading", listener2)
-
-    registry.emit("Sensor1.reading", 0, 1)  # triggers listener
-    registry.emit("Sensor2.reading", "a", "b")  # does NOT trigger listener
-
-
-if __name__ == '__main__':
-    test()
+        if auto:
+            for dep in dependencies:
+                self.subscribe(dep, update_derived)

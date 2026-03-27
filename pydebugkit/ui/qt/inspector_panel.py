@@ -1,11 +1,10 @@
-# inspector_panel.py
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QTreeWidget, QTreeWidgetItem,
     QLabel, QSplitter
 )
 from PyQt5.QtCore import Qt
-from pydebugkit.core.registry import registry
+from pydebugkit import global_registry
 from pydebugkit.ui.qt.plotter import LivePlot
 
 
@@ -37,16 +36,13 @@ class InspectorPanel(QWidget):
 
         self.layout.addWidget(splitter)
 
-        self._populate_tree()
-        registry.subscribe("__registry_updated__", lambda *k: self._populate_tree())
-
         self._root_items = {}  # cache for top-level items to speed up tree population
         self._callbacks = {}  # keep track of callbacks to avoid duplicates
 
     # -------------------------
     # Populate Tree
     # -------------------------
-    def _populate_tree(self):
+    def populate_tree(self, keys):
         self.tree.clear()
 
         tree_data = {}
@@ -54,7 +50,7 @@ class InspectorPanel(QWidget):
         # -------------------------
         # Build nested dict
         # -------------------------
-        for key in registry.keys():
+        for key in keys:
             parts = key.split(".")
             node = tree_data
 
@@ -101,17 +97,18 @@ class InspectorPanel(QWidget):
 
         if checked:
 
-            self.plot.add_series(key)
+            time_key = tk if global_registry.has_key(tk := f"{key}_timestamps") else None
+
             # plot it
             self._callbacks.setdefault(key, []).extend([
-                registry.subscribe(key, self.update_label),
-                self.plot.update_series,
+                global_registry.subscribe(key, self.update_label),
+                self.plot.add_series(key, time_key=time_key)
             ])
 
         else:
             # unsubscribe
             for cb in self._callbacks.get(key, []):
-                registry.unsubscribe(key, cb)
+                global_registry.unsubscribe(key, cb)
 
             # unplot it
             if key in self.plot.curves:

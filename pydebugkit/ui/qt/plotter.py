@@ -1,6 +1,6 @@
-from pyqtgraph import PlotWidget, mkPen
+from pyqtgraph import PlotWidget, mkPen, DateAxisItem
 
-from pydebugkit.core.registry import registry
+from pydebugkit import global_registry
 
 
 class LivePlot:
@@ -9,17 +9,28 @@ class LivePlot:
         self.plot_widget = PlotWidget(parent)
         self.plot_widget.setTitle(title)
         self.plot_widget.addLegend()
+        date_axis = DateAxisItem()
+        self.plot_widget.setAxisItems({"bottom": date_axis})
         self.curves = {}  # key -> plot curve
         self.data = {}    # key -> list of values
 
-    def add_series(self, key, **kwargs):
+    def add_series(self, key, time_key=None, **kwargs):
         """Add a series. kwargs are passed to mkPen and plot (color, width, style)."""
         color = kwargs.pop("pen", "w")
         width = kwargs.pop("width", 1)
         pen = mkPen(color=color, width=width)
         self.curves[key] = self.plot_widget.plot([], [], name=key, pen=pen, **kwargs)
         self.data[key] = []
-        registry.subscribe(key, self.update_series)
+
+        def update_with_time(key, value):
+            time_data = global_registry.get(time_key)
+            time_data, value_data = zip(*(zip(time_data, value)))
+            self.update_series(key, value=value_data, t=time_data)
+
+        if time_key is not None:
+            return global_registry.subscribe(key, update_with_time)
+        else:
+            return global_registry.subscribe(key, self.update_series)
 
     def update_series(self, key, value, t=None):
         if key not in self.curves:
