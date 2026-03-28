@@ -24,20 +24,20 @@ def debug_property(fn=None, **kwargs):
     return wrapper
 
 
-def collect(obj, namespace=""):
-    """Register all debug properties of an object to the global_registry."""
-    for attr_name in dir(obj):
-        attr = getattr(obj, attr_name)
-        dp: DebugProperty = getattr(attr, "_debug_property", None)
-        if dp is not None:
-            if dp.kwargs.get("key"):
-                # If a custom key is provided, use it with namespace substitution
-                namespace = dp.kwargs["key"].format(**obj.__dict__)
-            key = f"{namespace}.{attr_name}" if namespace else attr_name
-            # create a new DebugProperty with the instance bound
-            data = vars(dp)
-            data["instance"] = obj
-            global_registry.register(key, DebugProperty(**data))
+# def collect(obj, namespace=""):
+#     """Register all debug properties of an object to the global_registry."""
+#     for attr_name in dir(obj):
+#         attr = getattr(obj, attr_name)
+#         dp: DebugProperty = getattr(attr, "_debug_property", None)
+#         if dp is not None:
+#             if dp.kwargs.get("key"):
+#                 # If a custom key is provided, use it with namespace substitution
+#                 namespace = dp.kwargs["key"].format(**obj.__dict__)
+#             key = f"{namespace}.{attr_name}" if namespace else attr_name
+#             # create a new DebugProperty with the instance bound
+#             data = vars(dp)
+#             data["instance"] = obj
+#             global_registry.register(key, DebugProperty(**data))
 
 
 global_registry: Registry = Registry()

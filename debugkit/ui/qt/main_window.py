@@ -14,10 +14,10 @@ from debugkit.ui.qt.settings_window import SettingsWindow
 
 
 class DebugMainWindow(QMainWindow):
-    def __init__(self, registry: Registry, settings: AppSettings, parent=None):
+    def __init__(self, registry: Registry, settings: AppSettings = None, parent=None):
         super().__init__(parent)
         self.registry = registry
-        self.settings = settings
+        self.settings = settings or AppSettings()
 
         # Core UI components
         self.persistence = PersistenceManager()

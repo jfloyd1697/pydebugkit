@@ -21,13 +21,15 @@ class Registry:
     # -------------------------------
     def add(self, key, prop):
         """Register a DebugProperty or value"""
+        if key in self._settings:
+            raise ValueError(f"Key '{key}' already exists in registry")
         self._settings[key] = prop
 
     def get(self, key):
         """Return current value of a property"""
         if key in self._derived:
             return self._derived[key]()
-        prop = self._settings.get(key)
+        prop = self._settings[key]
         if hasattr(prop, "getter"):
             return prop.getter()
         return prop  # raw value
@@ -84,20 +86,20 @@ class Registry:
         """Return all registered keys (including derived)"""
         return list(set(list(self._settings.keys()) + list(self._derived.keys())))
 
-    def collect(self, obj, instance=None):
+    def collect(self, obj):
         """
         Collect all DebugProperties and CompositeSignals from an object/module
         and add them to this registry.
         """
-        collected = recursive_collect(obj, instance=instance)
+        collected = recursive_collect(obj, instance=obj)
 
         for key, prop in collected.items():
             # If it’s a DebugProperty and instance not set, assign
             if hasattr(prop, "_debug_property") and prop.instance is None:
-                prop.instance = instance or getattr(obj, "__class__", None)
+                prop.instance = obj or getattr(obj, "__class__", None)
 
             # Add to registry
-            self._settings[key] = prop
+            self.add(key, prop)
 
         return collected
 

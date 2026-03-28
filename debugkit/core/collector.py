@@ -1,7 +1,7 @@
 from debugkit.core.signals import CompositeSignal
 
 
-def collect(obj, instance=None):
+def collect(obj: object, instance=None):
     """
     Recursively collect all DebugProperties or CompositeSignals from an object/module.
     - obj: object, module, or class to inspect
@@ -21,8 +21,8 @@ def collect(obj, instance=None):
         # If it's a DebugProperty
         if hasattr(attr, "_debug_property"):
             dp = attr._debug_property
-            dp.instance = instance or getattr(obj, "__class__", None)
-            collected[name] = dp
+            dp.instance = instance or type(obj)
+            collected[f"{type(obj)}({id(obj)}.{name}"] = dp
 
         # If it's a CompositeSignal
         elif isinstance(attr, CompositeSignal):

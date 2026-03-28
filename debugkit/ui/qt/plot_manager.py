@@ -67,7 +67,7 @@ class MultiPanelPlotManager:
 
     def create_panel(self, name):
         panel = PlotPanel(title=name)
-        self.parent_layout.addWidget(panel)
+        self.parent_layout.add_plot_widget(panel, name=name)
         self.panels[name] = panel
         return panel
 

@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTimer
 from debugkit.ui.qt.main_window import DebugMainWindow
 from debugkit.ui.qt.plot_manager import MultiPanelPlotManager
-from debugkit.core import collect
 from debugkit import debug_property, global_registry
 import pyqtgraph as pg
 
@@ -21,14 +20,14 @@ class Sensor:
 
 # --- Setup application ---
 app = QApplication(sys.argv)
-window = DebugMainWindow()
+window = DebugMainWindow(global_registry)
 manager = MultiPanelPlotManager(window)
 
 # --- Create multiple sensor instances ---
 sensors, namespaces, colors = zip(*[(Sensor(), f"Sensor{i+1}", pg.intColor(i))  for i in range(8)])
 
 for sensor, ns in zip(sensors, namespaces):
-    collect(sensor, namespace=ns)
+    global_registry.collect(sensor)
 
 # --- Panel 1: overlay raw sensors ---
 raw_panel = manager.create_panel("Raw Sensors Overlay")
@@ -43,21 +42,21 @@ derived_panel.add_series("Derived.max", pen="w", width=2)
 derived_panel.add_series("Derived.min", pen="w", width=2)
 derived_panel.add_series("Derived.update", pen="m", width=2)
 
-global_registry.create_derived("Derived.total", lambda *v: sum(v), [f"{ns}.reading" for ns in namespaces])
-global_registry.create_derived("Derived.max", lambda *v: max(v), [f"{ns}.reading" for ns in namespaces])
-global_registry.create_derived("Derived.min", lambda *v: min(v), [f"{ns}.reading" for ns in namespaces])
-global_registry.create_derived("Derived.update", lambda *v: int(int(100 * v[0]) % 2), ["Derived.total"])
+# global_registry.create_derived("Derived.total", lambda *v: sum(v), [f"{ns}.reading" for ns in namespaces])
+# global_registry.create_derived("Derived.max", lambda *v: max(v), [f"{ns}.reading" for ns in namespaces])
+# global_registry.create_derived("Derived.min", lambda *v: min(v), [f"{ns}.reading" for ns in namespaces])
+# global_registry.create_derived("Derived.update", lambda *v: int(int(100 * v[0]) % 2), ["Derived.total"])
 
 window.show()
 
 
 # --- Update loop ---
-@global_registry.register_callback()
+# @global_registry.register_callback()
 def update():
     vals = []
-    for ns in namespaces:
-        val = global_registry.get(f"{ns}.reading")
-        global_registry.emit(f"{ns}.reading", val)
+    for ns in global_registry.all_keys():
+        val = global_registry.get(ns)
+        global_registry.emit(ns, val)
         vals.append(val)
     return int(int(100 * sum(vals)) % 2)
 

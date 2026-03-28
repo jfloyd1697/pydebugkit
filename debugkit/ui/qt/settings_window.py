@@ -1,7 +1,10 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QLabel, QPushButton, QDoubleSpinBox, QHBoxLayout
 
+from debugkit.ui.persistence import AppSettings
+
+
 class SettingsWindow(QWidget):
-    def __init__(self, settings, on_update=None):
+    def __init__(self, settings: AppSettings, on_update=None):
         super().__init__()
         self.setWindowTitle("Settings")
         self.settings = settings
@@ -17,7 +20,7 @@ class SettingsWindow(QWidget):
         interval_layout.addWidget(QLabel("Autosave Interval:"))
         self.interval_spin = QDoubleSpinBox()
         self.interval_spin.setRange(1, 3600)
-        self.interval_spin.setValue(settings.autosave_interval)
+        self.interval_spin.setValue(settings.autosave_interval_sec)
         interval_layout.addWidget(self.interval_spin)
         layout.addLayout(interval_layout)
 
