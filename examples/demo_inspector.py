@@ -3,10 +3,10 @@ import sys, random
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from PyQt5.QtCore import QTimer
 
-from pydebugkit.core import collect
-from pydebugkit import debug_property, global_registry
-from pydebugkit.core.recorder import Recorder
-from pydebugkit.ui.qt.inspector_panel import InspectorPanel
+from debugkit.core import collect
+from debugkit import debug_property, global_registry
+from debugkit.core.recorder import Recorder
+from debugkit.ui.qt.inspector_panel import InspectorPanel
 
 
 # -------------------------

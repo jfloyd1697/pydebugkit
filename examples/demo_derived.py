@@ -1,13 +1,11 @@
 import sys, random, os
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTimer
-from pydebugkit.ui.qt.main_window import DebugMainWindow
-from pydebugkit.ui.qt.multi_plot import MultiPlotManager
-from pydebugkit.core import collect
-from pydebugkit import debug_property, global_registry
+from debugkit.ui.qt.main_window import DebugMainWindow
+from debugkit.ui.qt.plot_manager import MultiPanelPlotManager
+from debugkit.core import collect
+from debugkit import debug_property, global_registry
 import pyqtgraph as pg
-
-LAYOUT_FILE = "layout_multi_instance_overlay_derived.bin"
 
 
 # --- Device class ---
@@ -24,11 +22,7 @@ class Sensor:
 # --- Setup application ---
 app = QApplication(sys.argv)
 window = DebugMainWindow()
-manager = MultiPlotManager(window)
-
-# Restore layout if exists
-if os.path.exists(LAYOUT_FILE):
-    window.load_layout(LAYOUT_FILE)
+manager = MultiPanelPlotManager(window)
 
 # --- Create multiple sensor instances ---
 sensors, namespaces, colors = zip(*[(Sensor(), f"Sensor{i+1}", pg.intColor(i))  for i in range(8)])
@@ -72,11 +66,4 @@ timer = QTimer()
 timer.timeout.connect(update)
 timer.start(50)  # 50ms update
 
-
-# Save layout on close
-def on_exit():
-    window.save_layout(LAYOUT_FILE)
-
-
-app.aboutToQuit.connect(on_exit)
 sys.exit(app.exec_())

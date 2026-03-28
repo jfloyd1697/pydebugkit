@@ -1,7 +1,8 @@
 from functools import wraps
 
-from pydebugkit.core.property import DebugProperty
-from pydebugkit.core.registry import Registry
+from debugkit.core.property import DebugProperty
+from debugkit.core.registry import Registry
+from debugkit.core.recorder import Recorder
 
 
 def debug_property(fn=None, **kwargs):
